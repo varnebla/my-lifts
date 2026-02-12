@@ -43,8 +43,8 @@ export const useAuthStore = defineStore('auth', {
     /**
      * Initialize/refresh auth state from server
      */
-    async initialize() {
-      if (this.initialized) return
+    async initialize(force = false) {
+      if (this.initialized && !force) return
 
       this.loading = true
       try {
@@ -64,11 +64,14 @@ export const useAuthStore = defineStore('auth', {
             avatar: data.user.avatar ?? null,
             name: data.user.name ?? null
           }
+        } else {
+          this.user = null
         }
 
         this.initialized = true
       } catch (error) {
         console.error('[Auth Store] Initialize error:', error)
+        this.user = null
       } finally {
         this.loading = false
       }

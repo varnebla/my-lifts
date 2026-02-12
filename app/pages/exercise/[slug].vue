@@ -243,7 +243,7 @@ function handleSetSaved() {
     <!-- Back button -->
     <div class="mb-6">
       <UButton
-        to="/"
+        to="/dashboard"
         variant="ghost"
         icon="i-lucide-arrow-left"
         color="neutral"
@@ -265,7 +265,7 @@ function handleSetSaved() {
         Ejercicio no encontrado
       </h2>
       <UButton
-        to="/"
+        to="/dashboard"
         class="mt-4"
       >
         Volver al Dashboard
@@ -343,7 +343,7 @@ function handleSetSaved() {
             <UBadge
               :color="currentPR.allTimeBest ? 'secondary' : 'primary'"
               variant="subtle"
-              size="xs"
+              size="sm"
               class="mt-3"
               :icon="'i-lucide-trophy'"
             >

@@ -116,6 +116,7 @@ async function handleSubmit() {
         <USelectMenu
           v-model="selectedExercise"
           :items="exercises"
+          size="xl"
           placeholder="Selecciona un ejercicio"
           label-key="name"
           class="w-full"
@@ -128,6 +129,7 @@ async function handleSubmit() {
           <UInput
             v-model.number="weightKg"
             type="number"
+            size="xl"
             step="0.5"
             min="0"
             placeholder="0"
@@ -138,6 +140,7 @@ async function handleSubmit() {
           <UInput
             v-model.number="reps"
             type="number"
+            size="xl"
             min="1"
             placeholder="0"
           />
@@ -149,6 +152,7 @@ async function handleSubmit() {
         <UInput
           v-model="date"
           type="date"
+          size="xl"
         />
       </UFormField>
 
@@ -158,21 +162,22 @@ async function handleSubmit() {
           v-model="notes"
           placeholder="RPE, sensaciones, etc."
           :rows="2"
+          size="xl"
         />
       </UFormField>
 
       <!-- Buttons -->
       <div class="flex gap-2 pt-2">
         <UButton
-          class="flex-1"
+          size="xl"
           color="neutral"
-          variant="outline"
+          variant="soft"
           @click="emit('update:open', false)"
         >
           Cancelar
         </UButton>
         <UButton
-          class="flex-1"
+          size="xl"
           type="submit"
           :loading="saving"
           :disabled="!isValid"

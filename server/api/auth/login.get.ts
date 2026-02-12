@@ -5,11 +5,15 @@
 export default defineEventHandler(async (event) => {
   const supabase = getServerSupabase(event)
   const requestUrl = getRequestURL(event)
+  const query = getQuery(event)
+  const next = typeof query.next === 'string' && query.next.startsWith('/')
+    ? query.next
+    : '/dashboard'
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${requestUrl.origin}/api/auth/callback`
+      redirectTo: `${requestUrl.origin}/api/auth/callback?next=${encodeURIComponent(next)}`
     }
   })
 

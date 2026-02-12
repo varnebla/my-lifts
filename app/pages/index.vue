@@ -1,469 +1,100 @@
 <script setup lang="ts">
-import type { SetWithExercise } from '~/types/database'
+const { isAuthenticated } = useAuth()
+const { open } = useLoginModal()
+const route = useRoute()
 
-definePageMeta({
-  middleware: 'auth'
+if (isAuthenticated.value) {
+  await navigateTo('/dashboard', { replace: true })
+}
+
+onMounted(() => {
+  if (route.query.login === '1') {
+    setTimeout(() => {
+      open()
+    }, 50)
+  }
 })
-
-const { userName, userEmail } = useAuth()
-const { calculatePRs } = usePRs()
-const { calculate: calculate1RM } = use1RM()
-const { calculateWeeklyComparison, filterLastNDays, formatVolume } = useStats()
-const toast = useToast()
-
-// Fetch sets with caching across navigation
-const { data: sets, status, error, refetch } = await useSetsData()
-
-const loading = computed(() => status.value === 'pending')
-
-// Mutations for create, update, delete
-const { remove } = useSetMutations(sets)
-
-// Modal state
-const showModal = ref(false)
-const editingSet = ref<SetWithExercise | undefined>(undefined)
-
-// Calculate PRs from sets
-const prs = computed(() => calculatePRs(sets.value ?? []))
-
-// Weekly stats with comparison
-const weeklyStats = computed(() => calculateWeeklyComparison(sets.value ?? []))
-const formattedVolume = computed(() => formatVolume(weeklyStats.value.current.volume))
-
-// Filter sets to last 30 days for home display
-const recentSets = computed(() => filterLastNDays(sets.value ?? [], 30))
-
-// Group sets by date (only last 30 days)
-const setsByDate = computed(() => {
-  const grouped: Record<string, SetWithExercise[]> = {}
-
-  for (const set of recentSets.value) {
-    const dateKey = set.date
-    if (!grouped[dateKey]) {
-      grouped[dateKey] = []
-    }
-    grouped[dateKey].push(set)
-  }
-
-  return grouped
-})
-
-const sortedDates = computed(() => {
-  return Object.keys(setsByDate.value).sort((a, b) => b.localeCompare(a))
-})
-
-// Check if there are more sets beyond last 30 days
-const hasOlderSets = computed(() => (sets.value?.length ?? 0) > recentSets.value.length)
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr + 'T00:00:00')
-  const today = new Date()
-  const yesterday = new Date(today)
-  yesterday.setDate(yesterday.getDate() - 1)
-
-  if (dateStr === today.toISOString().split('T')[0]) {
-    return 'Hoy'
-  }
-  if (dateStr === yesterday.toISOString().split('T')[0]) {
-    return 'Ayer'
-  }
-
-  return date.toLocaleDateString('es-ES', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long'
-  })
-}
-
-function openAddModal() {
-  editingSet.value = undefined
-  showModal.value = true
-}
-
-function openEditModal(set: SetWithExercise) {
-  editingSet.value = set
-  showModal.value = true
-}
-
-async function handleDelete(id: string, exerciseName: string) {
-  const result = await remove(id)
-
-  if (result.success) {
-    toast.add({
-      title: 'Set eliminado',
-      description: `${exerciseName} eliminado`,
-      icon: 'i-lucide-trash-2',
-      color: 'neutral'
-    })
-  } else {
-    toast.add({
-      title: 'Error',
-      description: result.error,
-      icon: 'i-lucide-alert-circle',
-      color: 'error'
-    })
-  }
-}
 </script>
 
 <template>
-  <UContainer class="py-8">
-    <div class="space-y-8">
-      <!-- Header -->
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-3xl font-bold text-highlighted">
-            Dashboard
-          </h1>
-          <p class="mt-1 text-muted">
-            Hola, {{ userName || userEmail }}
-          </p>
-        </div>
-        <UButton
-          icon="i-lucide-plus"
-          @click="openAddModal"
+  <UContainer class="py-12 lg:py-16">
+    <div class="mx-auto max-w-5xl space-y-10">
+      <div class="text-center space-y-4">
+        <UBadge
+          color="primary"
+          variant="subtle"
+          size="lg"
+          class="mx-auto"
+          icon="i-lucide-dumbbell"
         >
-          Registrar Set
-        </UButton>
-      </div>
+          My Lifts
+        </UBadge>
 
-      <!-- Error State -->
-      <div
-        v-if="error"
-        class="card-elevated rounded-xl text-center py-8 px-6"
-      >
-        <UIcon
-          name="i-lucide-alert-circle"
-          class="h-8 w-8 mx-auto mb-2 text-red-400"
-        />
-        <p class="text-red-400">
-          {{ error }}
+        <h1 class="text-4xl md:text-5xl font-bold text-balance text-highlighted leading-tight">
+          Trackea tus levantamientos
+          <span class="text-primary">y mejora tu 1RM</span>
+        </h1>
+
+        <p class="mx-auto max-w-2xl text-balance md:text-lg text-muted">
+          Registra cada set, revisa tu progreso semanal y detecta tus personal records en segundos.
         </p>
-        <UButton
-          variant="ghost"
-          class="mt-4"
-          @click="() => refetch()"
-        >
-          Reintentar
-        </UButton>
-      </div>
 
-      <!-- Loading State -->
-      <div
-        v-else-if="loading && sets.length === 0"
-        class="space-y-4"
-      >
-        <USkeleton class="h-6 w-32" />
-        <div class="card-elevated rounded-xl p-5">
-          <div class="space-y-3">
-            <div
-              v-for="i in 3"
-              :key="i"
-              class="flex items-center justify-between"
-            >
-              <div class="flex items-center gap-3">
-                <USkeleton class="h-10 w-10 rounded-lg" />
-                <div class="space-y-1">
-                  <USkeleton class="h-4 w-24" />
-                  <USkeleton class="h-3 w-16" />
-                </div>
-              </div>
-              <USkeleton class="h-8 w-8" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Empty State -->
-      <div
-        v-else-if="sets.length === 0"
-        class="card-elevated rounded-xl text-center py-12 px-6"
-      >
-        <UIcon
-          name="i-lucide-dumbbell"
-          class="h-12 w-12 mx-auto text-dimmed"
-        />
-        <h3 class="mt-4 text-lg font-medium text-highlighted">
-          No hay registros todavia
-        </h3>
-        <p class="mt-2 text-sm text-muted">
-          Registra tu primer set para empezar a trackear tu progreso.
-        </p>
-        <UButton
-          class="mt-4"
-          icon="i-lucide-plus"
-          @click="openAddModal"
-        >
-          Registrar Set
-        </UButton>
-      </div>
-
-      <!-- Content when there are sets -->
-      <template v-else>
-        <!-- PRs Section -->
-        <div v-if="prs.length > 0">
-          <h2 class="text-sm font-semibold uppercase tracking-wider text-muted mb-4">
-            Personal Records
-          </h2>
-          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <NuxtLink
-              v-for="pr in prs"
-              :key="pr.exercise.id"
-              :to="`/exercise/${pr.exercise.slug}`"
-              class="group"
-            >
-              <div class="card-elevated relative overflow-hidden rounded-xl p-5 transition-all">
-                <!-- Background decoration -->
-                <div class="absolute top-2 right-2 opacity-10">
-                  <UIcon
-                    name="i-lucide-dumbbell"
-                    class="h-14 w-14 text-primary-400"
-                  />
-                </div>
-                <!-- Content -->
-                <div class="relative">
-                  <p class="text-xs font-medium uppercase tracking-wider text-muted">
-                    {{ pr.exercise.name }}
-                  </p>
-                  <div class="mt-2 flex items-baseline gap-2">
-                    <span class="font-display text-5xl tracking-tight text-primary-400 text-glow">{{ pr.current1RM }}</span>
-                    <span class="text-lg text-muted">kg</span>
-                  </div>
-                  <p class="mt-2 text-sm text-dimmed">
-                    {{ pr.latestSet.weight_kg }}kg x {{ pr.latestSet.reps }} reps
-                  </p>
-                  <!-- Status badge -->
-                  <UBadge
-                    :color="pr.allTimeBest1RM ? 'secondary' : 'primary'"
-                    variant="subtle"
-                    size="xs"
-                    class="mt-2"
-                    :icon="'i-lucide-trophy'"
-                  >
-                    {{ pr.allTimeBest1RM ? `Best: ${pr.allTimeBest1RM}kg` : 'Personal Best' }}
-                  </UBadge>
-                </div>
-                <!-- Chevron -->
-                <div class="absolute bottom-5 right-5">
-                  <UIcon
-                    name="i-lucide-chevron-right"
-                    class="h-5 w-5 text-dimmed transition-transform group-hover:translate-x-1 group-hover:text-primary-400"
-                  />
-                </div>
-              </div>
-            </NuxtLink>
-          </div>
-        </div>
-
-        <!-- Weekly Stats Section -->
-        <div>
-          <h2 class="text-sm font-semibold uppercase tracking-wider text-muted mb-4">
-            Esta Semana
-          </h2>
-          <div class="grid gap-4 sm:grid-cols-3">
-            <!-- Sets -->
-            <div class="card-elevated rounded-xl p-5">
-              <div class="flex items-center gap-2 mb-2">
-                <UIcon
-                  name="i-lucide-layers"
-                  class="h-4 w-4 text-secondary-400"
-                />
-                <p class="text-xs font-medium uppercase tracking-wider text-muted">
-                  Sets
-                </p>
-              </div>
-              <div class="flex items-baseline gap-2">
-                <span class="font-display text-4xl text-primary-400 text-glow">{{ weeklyStats.current.sets }}</span>
-                <span
-                  v-if="weeklyStats.setsDiff !== 0"
-                  class="text-sm font-medium"
-                  :class="weeklyStats.setsDiff > 0 ? 'text-emerald-400' : 'text-red-400'"
-                >
-                  {{ weeklyStats.setsDiff > 0 ? '+' : '' }}{{ weeklyStats.setsDiff }}
-                </span>
-                <span
-                  v-else-if="weeklyStats.previous.sets > 0"
-                  class="text-sm text-dimmed"
-                >=</span>
-              </div>
-              <p class="mt-1 text-xs text-dimmed">
-                vs {{ weeklyStats.previous.sets }} semana pasada
-              </p>
-            </div>
-
-            <!-- Training Days -->
-            <div class="card-elevated rounded-xl p-5">
-              <div class="flex items-center gap-2 mb-2">
-                <UIcon
-                  name="i-lucide-calendar-days"
-                  class="h-4 w-4 text-secondary-400"
-                />
-                <p class="text-xs font-medium uppercase tracking-wider text-muted">
-                  Dias
-                </p>
-              </div>
-              <div class="flex items-baseline gap-2">
-                <span class="font-display text-4xl text-primary-400 text-glow">{{ weeklyStats.current.days }}</span>
-                <span class="text-lg text-muted">/7</span>
-                <span
-                  v-if="weeklyStats.daysDiff !== 0"
-                  class="text-sm font-medium"
-                  :class="weeklyStats.daysDiff > 0 ? 'text-emerald-400' : 'text-red-400'"
-                >
-                  {{ weeklyStats.daysDiff > 0 ? '+' : '' }}{{ weeklyStats.daysDiff }}
-                </span>
-              </div>
-              <p class="mt-1 text-xs text-dimmed">
-                vs {{ weeklyStats.previous.days }} semana pasada
-              </p>
-            </div>
-
-            <!-- Volume -->
-            <div class="card-elevated rounded-xl p-5">
-              <div class="flex items-center gap-2 mb-2">
-                <UIcon
-                  name="i-lucide-weight"
-                  class="h-4 w-4 text-secondary-400"
-                />
-                <p class="text-xs font-medium uppercase tracking-wider text-muted">
-                  Volumen
-                </p>
-              </div>
-              <div class="flex items-baseline gap-2">
-                <span class="font-display text-4xl text-primary-400 text-glow">{{ formattedVolume.value }}</span>
-                <span class="text-lg text-muted">{{ formattedVolume.unit }}</span>
-                <span
-                  v-if="weeklyStats.volumePercentChange !== null && weeklyStats.volumePercentChange !== 0"
-                  class="text-sm font-medium"
-                  :class="weeklyStats.volumePercentChange > 0 ? 'text-emerald-400' : 'text-red-400'"
-                >
-                  {{ weeklyStats.volumePercentChange > 0 ? '+' : '' }}{{ weeklyStats.volumePercentChange }}%
-                </span>
-              </div>
-              <p class="mt-1 text-xs text-dimmed">
-                {{ formatVolume(weeklyStats.previous.volume).value }}{{ formatVolume(weeklyStats.previous.volume).unit }} semana pasada
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <!-- History Section -->
-        <div class="space-y-6">
-          <div class="flex items-center justify-between">
-            <h2 class="text-sm font-semibold uppercase tracking-wider text-muted">
-              Historial
-            </h2>
-            <NuxtLink
-              to="/history"
-              class="text-sm text-primary-400 hover:text-primary-300 flex items-center gap-1"
-            >
-              Ver todo
-              <UIcon
-                name="i-lucide-arrow-right"
-                class="h-4 w-4"
-              />
-            </NuxtLink>
-          </div>
-
-          <!-- Empty recent history -->
-          <div
-            v-if="recentSets.length === 0"
-            class="card-elevated rounded-xl p-8 text-center"
+        <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
+          <UButton
+            size="xl"
+            @click="open"
           >
+            Registrar mi primer set
+          </UButton>
+        </div>
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-3">
+        <div class="card-elevated rounded-xl p-5 space-y-2">
+          <div class="flex items-center gap-2 text-primary">
             <UIcon
-              name="i-lucide-calendar-x"
-              class="h-10 w-10 mx-auto text-dimmed"
+              name="i-lucide-trophy"
+              class="h-5 w-5"
             />
-            <p class="mt-3 text-sm text-muted">
-              No hay sets en los ultimos 30 dias
+            <p class="text-sm font-semibold uppercase tracking-wide text-muted">
+              Personal Records
             </p>
           </div>
-
-          <div
-            v-for="dateKey in sortedDates"
-            :key="dateKey"
-          >
-            <h3 class="text-sm font-medium text-dimmed mb-3 capitalize">
-              {{ formatDate(dateKey) }}
-            </h3>
-            <div class="card-elevated rounded-xl p-4">
-              <div class="divide-y divide-zinc-800">
-                <div
-                  v-for="set in setsByDate[dateKey]"
-                  :key="set.id"
-                  class="flex items-center justify-between py-3 first:pt-0 last:pb-0"
-                >
-                  <div class="flex items-center gap-3">
-                    <div class="p-2 bg-zinc-800 rounded-lg">
-                      <UIcon
-                        name="i-lucide-dumbbell"
-                        class="h-5 w-5 text-primary-400"
-                      />
-                    </div>
-                    <div>
-                      <p class="font-medium text-highlighted">
-                        {{ set.exercise.name }}
-                      </p>
-                      <p class="text-sm text-muted">
-                        {{ set.weight_kg }}kg x {{ set.reps }} reps
-                        <span class="text-primary-400">
-                          · {{ calculate1RM(set.weight_kg, set.reps) }}kg e1RM
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-                  <UDropdownMenu
-                    :items="[
-                      [{
-                        label: 'Editar',
-                        icon: 'i-lucide-pencil',
-                        onSelect: () => openEditModal(set)
-                      }],
-                      [{
-                        label: 'Eliminar',
-                        icon: 'i-lucide-trash-2',
-                        color: 'error' as const,
-                        onSelect: () => handleDelete(set.id, set.exercise.name)
-                      }]
-                    ]"
-                  >
-                    <UButton
-                      icon="i-lucide-more-vertical"
-                      color="neutral"
-                      variant="ghost"
-                      size="sm"
-                    />
-                  </UDropdownMenu>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Show link to older sets if they exist -->
-          <div
-            v-if="hasOlderSets"
-            class="text-center"
-          >
-            <NuxtLink
-              to="/history"
-              class="inline-flex items-center gap-2 text-sm text-muted hover:text-primary-400 transition-colors"
-            >
-              <UIcon
-                name="i-lucide-history"
-                class="h-4 w-4"
-              />
-              Ver historial completo ({{ sets.length - recentSets.length }} sets anteriores)
-            </NuxtLink>
-          </div>
+          <p class="text-sm text-muted">
+            Calcula tu e1RM automáticamente y detecta mejoras por ejercicio.
+          </p>
         </div>
-      </template>
-    </div>
 
-    <!-- Set Modal (Add/Edit) -->
-    <SetModal
-      v-model:open="showModal"
-      :edit-set="editingSet"
-      @saved="() => refetch()"
-    />
+        <div class="card-elevated rounded-xl p-5 space-y-2">
+          <div class="flex items-center gap-2 text-primary">
+            <UIcon
+              name="i-lucide-calendar-days"
+              class="h-5 w-5"
+            />
+            <p class="text-sm font-semibold uppercase tracking-wide text-muted">
+              Historial claro
+            </p>
+          </div>
+          <p class="text-sm text-muted">
+            Consulta tus sets por fecha y ejercicio para planear mejor cada semana.
+          </p>
+        </div>
+
+        <div class="card-elevated rounded-xl p-5 space-y-2">
+          <div class="flex items-center gap-2 text-primary">
+            <UIcon
+              name="i-lucide-bar-chart-3"
+              class="h-5 w-5"
+            />
+            <p class="text-sm font-semibold uppercase tracking-wide text-muted">
+              Progreso visual
+            </p>
+          </div>
+          <p class="text-sm text-muted">
+            Entiende tendencias de rendimiento y volumen de entrenamiento rápidamente.
+          </p>
+        </div>
+      </div>
+    </div>
   </UContainer>
 </template>

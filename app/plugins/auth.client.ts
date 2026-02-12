@@ -1,28 +1,46 @@
 /**
  * Client-side auth plugin
- * Handles post-login actions (close modal, show toast)
+ * Handles auth state changes (login/logout/session loss)
  */
 export default defineNuxtPlugin(() => {
+  const supabase = useSupabase()
   const authStore = useAuthStore()
-  const route = useRoute()
+  const { close } = useLoginModal()
+  const toast = useToast()
 
-  // Check if we just came back from OAuth callback
-  if (route.path === '/' && authStore.isAuthenticated) {
-    // Close login modal if open
-    const { close } = useLoginModal()
-    close()
-
-    // Show welcome toast
-    const toast = useToast()
-    const userName = authStore.userName || authStore.userEmail
-
-    if (userName) {
-      toast.add({
-        title: 'Sesión iniciada',
-        description: `Bienvenido, ${userName}`,
-        icon: 'i-lucide-check-circle',
-        color: 'success'
-      })
-    }
+  const showWelcomeToast = (name: string) => {
+    toast.add({
+      title: 'Sesión iniciada',
+      description: `Bienvenido, ${name}`,
+      icon: 'i-lucide-check-circle',
+      color: 'success'
+    })
   }
+
+  const { data: authSubscription } = supabase.auth.onAuthStateChange((event, session) => {
+    if (session?.user) {
+      authStore.setUser(session.user)
+      close()
+
+      if (event === 'SIGNED_IN') {
+        const userName = session.user.user_metadata?.full_name ?? session.user.email
+        if (userName) {
+          showWelcomeToast(userName)
+        }
+      }
+
+      return
+    }
+
+    if (event !== 'SIGNED_IN') {
+      authStore.clearAuth()
+      clearUserSessionData()
+
+      navigateTo('/', { replace: true })
+    }
+  })
+
+  onScopeDispose(() => {
+    authSubscription.subscription.unsubscribe()
+  })
 })

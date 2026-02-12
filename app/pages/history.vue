@@ -125,7 +125,7 @@ async function handleDelete(id: string, exerciseName: string) {
       <div class="flex items-center justify-between gap-4">
         <div class="flex items-center gap-4">
           <UButton
-            to="/"
+            to="/dashboard"
             variant="ghost"
             icon="i-lucide-arrow-left"
             color="neutral"

@@ -8,19 +8,20 @@
 export default defineNuxtRouteMiddleware(async (_to) => {
   const authStore = useAuthStore()
 
-  // On client, ensure auth is initialized
+  // On client, always revalidate auth state to detect lost/expired sessions
   // (Server plugin already ran on SSR)
-  if (import.meta.client && !authStore.initialized) {
-    await authStore.initialize()
+  if (import.meta.client) {
+    await authStore.initialize(true)
   }
 
-  // If not authenticated, open login modal and stay on current page
+  // Hard-gate private routes: redirect to home and request login modal
   if (!authStore.isAuthenticated) {
-    if (import.meta.client) {
-      const { open } = useLoginModal()
-      setTimeout(() => {
-        open()
-      }, 100)
-    }
+    return navigateTo({
+      path: '/',
+      query: {
+        login: '1',
+        redirect: _to.fullPath
+      }
+    }, { replace: true })
   }
 })

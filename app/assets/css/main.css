@@ -48,12 +48,12 @@
 }
 
 /* Custom dark theme overrides */
-.dark {
+/* .dark {
   --ui-bg-default: var(--color-zinc-950);
   --ui-bg-muted: var(--color-zinc-900);
   --ui-bg-elevated: var(--color-zinc-900);
   --ui-bg-accented: var(--color-zinc-800);
-}
+} */
 
 /* Display font for numbers */
 .font-display {
@@ -93,4 +93,13 @@
 /* Glow effect for important numbers */
 .text-glow {
   text-shadow: 0 0 20px rgba(190, 255, 0, 0.5);
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const { isAuthenticated, userEmail, userAvatar, userName, logout, loading } = useAuth()
 const loginModal = useLoginModal()
+const homeLink = computed(() => (isAuthenticated.value ? '/dashboard' : '/'))
 
 // Auth is initialized by the server plugin during SSR
 // and by the middleware on client-side navigation
@@ -41,7 +42,7 @@ async function handleLogout(e: Event) {
     <UHeader>
       <template #left>
         <NuxtLink
-          to="/"
+          :to="homeLink"
           class="flex items-center gap-2"
         >
           <span class="text-xl font-bold text-primary">My Lifts</span>

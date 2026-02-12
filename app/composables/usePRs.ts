@@ -18,6 +18,14 @@ export interface ExercisePR {
 export function usePRs() {
   const { calculate } = use1RM()
 
+  function sortByLatestSet(prs: ExercisePR[]): ExercisePR[] {
+    return [...prs].sort((a, b) => {
+      const dateCompare = b.latestSet.date.localeCompare(a.latestSet.date)
+      if (dateCompare !== 0) return dateCompare
+      return b.latestSet.created_at.localeCompare(a.latestSet.created_at)
+    })
+  }
+
   /**
    * Calculate current (latest) 1RM for each exercise, with optional all-time best
    */
@@ -42,6 +50,8 @@ export function usePRs() {
       })
 
       const latestSet = sorted[0]
+      if (!latestSet) continue
+
       const current1RM = calculate(latestSet.weight_kg, latestSet.reps)
 
       // Find all-time best
@@ -95,6 +105,7 @@ export function usePRs() {
 
   return {
     calculatePRs,
+    sortByLatestSet,
     isNewPR
   }
 }

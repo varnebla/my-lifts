@@ -46,7 +46,6 @@ async function handleGoogleLogin() {
             block
             size="xl"
             color="neutral"
-            variant="outline"
             icon="i-simple-icons-google"
             :loading="loading"
             @click="handleGoogleLogin"

@@ -6,6 +6,9 @@
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const code = query.code as string
+  const next = typeof query.next === 'string' && query.next.startsWith('/')
+    ? query.next
+    : '/dashboard'
   
   if (!code) {
     return sendRedirect(event, '/?error=no_code')
@@ -21,6 +24,6 @@ export default defineEventHandler(async (event) => {
     return sendRedirect(event, '/?error=auth_failed')
   }
 
-  // Redirect to home - session is now active
-  return sendRedirect(event, '/')
+  // Redirect to intended internal path - session is now active
+  return sendRedirect(event, next)
 })

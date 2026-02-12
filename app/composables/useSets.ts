@@ -59,6 +59,8 @@ export function useSetActions() {
 
       if (insertError) throw insertError
 
+      await refreshNuxtData('user-sets')
+
       return { success: true }
     } catch (e) {
       console.error('Error creating set:', e)
@@ -81,6 +83,8 @@ export function useSetActions() {
         .eq('id', id)
 
       if (updateError) throw updateError
+
+      await refreshNuxtData('user-sets')
 
       return { success: true }
     } catch (e) {

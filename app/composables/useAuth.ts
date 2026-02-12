@@ -14,9 +14,14 @@ export function useAuth() {
   // Login with Google OAuth - redirects to server endpoint
   const loginWithGoogle = async () => {
     try {
+      const route = useRoute()
+      const redirect = typeof route.query.redirect === 'string' && route.query.redirect.startsWith('/')
+        ? route.query.redirect
+        : '/dashboard'
+
       // Navigate to server login endpoint
       // This will redirect to Google OAuth, then back to /api/auth/callback
-      await navigateTo('/api/auth/login', { external: true })
+      await navigateTo(`/api/auth/login?next=${encodeURIComponent(redirect)}`, { external: true })
       return { success: true }
     } catch (error) {
       console.error('Google login error:', error)
@@ -34,6 +39,7 @@ export function useAuth() {
       
       // Clear local state
       authStore.clearAuth()
+      clearUserSessionData()
 
       // Show logout toast
       const toast = useToast()
@@ -43,6 +49,8 @@ export function useAuth() {
         icon: 'i-lucide-log-out',
         color: 'neutral'
       })
+
+      await navigateTo('/', { replace: true })
 
       return { success: true }
     } catch (error) {
