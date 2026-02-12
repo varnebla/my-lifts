@@ -163,7 +163,8 @@ const currentPR = computed(() => {
 })
 
 // Percentage table
-const percentages = [100, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50]
+const percentages = [100, 95, 90, 85, 80, 75, 70, 60, 50]
+const selectedPercentage = ref(100)
 
 const percentageTable = computed(() => {
   if (!currentPR.value) return []
@@ -173,6 +174,14 @@ const percentageTable = computed(() => {
     weight: Math.round(currentPR.value!.value * pct / 100 * 10) / 10
   }))
 })
+
+function formatWeight(weight: number): string {
+  return Number.isInteger(weight) ? `${weight}` : weight.toFixed(1)
+}
+
+function selectPercentage(percentage: number) {
+  selectedPercentage.value = percentage
+}
 
 // Format date for chart labels
 function formatDateShort(dateStr: string): string {
@@ -248,7 +257,7 @@ function handleSetSaved() {
         icon="i-lucide-arrow-left"
         color="neutral"
       >
-        Back
+        Atrás
       </UButton>
     </div>
 
@@ -279,11 +288,11 @@ function handleSetSaved() {
     >
       <!-- Header -->
       <div class="flex items-center justify-between gap-4">
-        <div class="flex items-center gap-4">
-          <div class="p-3 bg-accented rounded-xl">
+        <div class="flex items-center gap-2 sm:gap-4">
+          <div class="p-2 md:p-3 bg-accented rounded-xl flex items-center">
             <UIcon
               name="i-lucide-dumbbell"
-              class="h-8 w-8 text-primary-400"
+              class="size-5 text-primary-400"
             />
           </div>
           <USkeleton
@@ -292,7 +301,7 @@ function handleSetSaved() {
           />
           <h1
             v-else
-            class="text-3xl font-bold text-highlighted"
+            class="text-2xl md:text-3xl font-bold text-highlighted"
           >
             {{ exercise?.name }}
           </h1>
@@ -300,11 +309,27 @@ function handleSetSaved() {
         <!-- Button in header -->
         <UButton
           icon="i-lucide-plus"
+          size="lg"
+          class="hidden sm:flex"
+          label="Nuevo Set"
+          :disabled="loading"
+          @click="editingSet = undefined; showModal = true"
+        />
+        <UButton
+          icon="i-lucide-plus"
+          size="lg"
+          class="sm:hidden"
+          square
+          :disabled="loading"
+          @click="editingSet = undefined; showModal = true"
+        />
+        <!-- <UButton
+          icon="i-lucide-plus"
           :disabled="loading"
           @click="editingSet = undefined; showModal = true"
         >
           Registrar Set
-        </UButton>
+        </UButton> -->
       </div>
 
       <!-- PR Hero Card + Chart Row -->
@@ -419,7 +444,7 @@ function handleSetSaved() {
         class="grid gap-6 lg:grid-cols-2"
       >
         <!-- Percentage Table -->
-        <div class="card-elevated rounded-xl p-5">
+        <div class="card-elevated rounded-xl p-5 lg:flex lg:max-h-128 lg:flex-col lg:overflow-hidden">
           <div class="flex items-center gap-2 mb-4">
             <UIcon
               name="i-lucide-percent"
@@ -443,26 +468,32 @@ function handleSetSaved() {
             <p class="text-sm text-dimmed mb-4">
               Based on your 1RM of <span class="text-primary-400 font-display text-lg">{{ currentPR?.value }}</span> kg
             </p>
-            <div class="grid grid-cols-2 gap-2">
-              <div
+
+            <div class="space-y-2">
+              <button
                 v-for="row in percentageTable"
-                :key="row.percentage"
-                class="flex items-center justify-between p-2 rounded-lg"
-                :class="row.percentage === 100
-                  ? 'bg-primary-500/20 border border-primary-500/30'
-                  : 'bg-zinc-800/50'"
+                :key="`list-${row.percentage}`"
+                type="button"
+                class="w-full flex items-center justify-between rounded-lg border px-3 py-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/60"
+                :class="selectedPercentage === row.percentage
+                  ? 'border-primary-500/50 bg-primary-500/15'
+                  : 'border-zinc-800 bg-zinc-800/50 hover:border-zinc-700'"
+                @click="selectPercentage(row.percentage)"
               >
-                <span class="text-sm font-medium text-muted">
+                <span
+                  class="  leading-none"
+                  :class="selectedPercentage === row.percentage ? 'text-primary-300' : 'text-muted'"
+                >
                   {{ row.percentage }}%
                 </span>
                 <span
-                  :class="row.percentage === 100
-                    ? 'font-display text-xl text-primary-400'
-                    : 'font-semibold text-highlighted'"
+                  class="font-display text-2xl leading-none"
+                  :class="selectedPercentage === row.percentage ? 'text-primary-300' : 'text-highlighted'"
                 >
-                  {{ row.weight }} kg
+                  {{ formatWeight(row.weight) }}
+                  <span class="text-sm font-medium text-muted">kg</span>
                 </span>
-              </div>
+              </button>
             </div>
           </template>
         </div>
@@ -496,7 +527,7 @@ function handleSetSaved() {
           </div>
           <div
             v-else
-            class="divide-y divide-zinc-800"
+            class="divide-y divide-zinc-800 lg:overflow-y-auto lg:pr-1"
           >
             <div
               v-for="set in recentHistory"

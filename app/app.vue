@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { isAuthenticated, userEmail, userAvatar, userName, logout, loading } = useAuth()
+const { isAuthenticated, userEmail, userName, logout, loading } = useAuth()
 const loginModal = useLoginModal()
 const homeLink = computed(() => (isAuthenticated.value ? '/dashboard' : '/'))
 
@@ -20,6 +20,9 @@ useHead({
 
 const title = 'My Lifts'
 const description = 'Trackea tus levantamientos y visualiza tu progreso de 1RM.'
+const items = [
+  { label: 'Historial', to: '/history', icon: 'i-lucide-history' },
+  { label: 'Records', to: '/records', icon: 'i-lucide-award' }]
 
 useSeoMeta({
   title,
@@ -40,15 +43,24 @@ async function handleLogout(e: Event) {
 <template>
   <UApp>
     <UHeader>
-      <template #left>
+      <template #title>
         <NuxtLink
           :to="homeLink"
-          class="flex items-center gap-2"
+          class="flex items-center gap-2 ml-auto md:ml-0"
         >
           <span class="text-xl font-bold text-primary">My Lifts</span>
         </NuxtLink>
       </template>
-
+      <UNavigationMenu
+        :items="items"
+      />
+      <template #body>
+        <UNavigationMenu
+          :items="items"
+          orientation="vertical"
+          class="-mx-2.5"
+        />
+      </template>
       <template #right>
         <UColorModeButton />
 
@@ -66,15 +78,7 @@ async function handleLogout(e: Event) {
               }]
             ]"
           >
-            <UAvatar
-              v-if="userAvatar"
-              :src="userAvatar"
-              :alt="userName || userEmail || 'Usuario'"
-              size="sm"
-              class="cursor-pointer"
-            />
             <UButton
-              v-else
               icon="i-lucide-user"
               color="neutral"
               variant="ghost"

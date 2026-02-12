@@ -5,7 +5,7 @@ definePageMeta({
   middleware: 'auth'
 })
 
-const { userName, userEmail } = useAuth()
+const { userName, userEmail, userAvatar } = useAuth()
 const { calculatePRs, sortByLatestSet } = usePRs()
 const { calculate: calculate1RM } = use1RM()
 const { calculateWeeklyComparison, filterLastNDays, formatVolume } = useStats()
@@ -116,20 +116,37 @@ async function handleSetSaved() {
     <div class="space-y-8">
       <!-- Header -->
       <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-3xl font-bold text-highlighted">
-            Dashboard
-          </h1>
-          <p class="mt-1 text-muted">
-            Hola, {{ userName || userEmail }}
-          </p>
-        </div>
+        <article class="flex gap-2 sm:gap-3 items-center">
+          <UAvatar
+            v-if="userAvatar"
+            :src="userAvatar"
+            :alt="userName || userEmail || 'Usuario'"
+            size="xl"
+          />
+          <div>
+            <p class="mt-1 text-muted text-sm">
+              Bienvenido de nuevo,
+            </p>
+            <h1 class="text-xl font-bold text-highlighted">
+              <!-- {{ userName || userEmail }} -->
+              Victor Arnedo Blanco
+            </h1>
+          </div>
+        </article>
         <UButton
           icon="i-lucide-plus"
+          size="lg"
+          class="hidden sm:flex"
+          label="Nuevo Set"
           @click="openAddModal"
-        >
-          Registrar Set
-        </UButton>
+        />
+        <UButton
+          icon="i-lucide-plus"
+          size="lg"
+          class="sm:hidden"
+          square
+          @click="openAddModal"
+        />
       </div>
 
       <!-- Error State -->
@@ -293,7 +310,7 @@ async function handleSetSaved() {
                   <UBadge
                     :color="pr.allTimeBest1RM ? 'secondary' : 'primary'"
                     variant="subtle"
-                    size="xs"
+                    size="sm"
                     class="mt-2"
                     :icon="'i-lucide-trophy'"
                   >
