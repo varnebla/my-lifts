@@ -8,6 +8,13 @@ definePageMeta({
 const { calculate: calculate1RM } = use1RM()
 const toast = useToast()
 
+useSeoMeta({
+  title: 'Historial | My Lifts',
+  description: 'Explora tu historial completo de sets por fecha y ejercicio para analizar tu evolución en My Lifts.',
+  ogTitle: 'Historial | My Lifts',
+  ogDescription: 'Explora tu historial completo de sets por fecha y ejercicio para analizar tu evolución en My Lifts.'
+})
+
 // Fetch exercises and sets with SSR caching
 const { data: exercises } = await useExercisesData()
 const { data: sets, status, refetch } = await useSetsData()

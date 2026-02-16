@@ -5,6 +5,13 @@ definePageMeta({
   middleware: 'auth'
 })
 
+useSeoMeta({
+  title: 'Records | My Lifts',
+  description: 'Revisa tus personal records por ejercicio y detecta mejoras recientes de rendimiento en My Lifts.',
+  ogTitle: 'Records | My Lifts',
+  ogDescription: 'Revisa tus personal records por ejercicio y detecta mejoras recientes de rendimiento en My Lifts.'
+})
+
 const { calculatePRs, sortByLatestSet } = usePRs()
 const { data: sets, status } = await useSetsData()
 

@@ -3,6 +3,13 @@ const { isAuthenticated } = useAuth()
 const { open } = useLoginModal()
 const route = useRoute()
 
+useSeoMeta({
+  title: 'My Lifts | Trackea tus levantamientos y mejora tu 1RM',
+  description: 'Registra cada set, revisa tu progreso semanal y detecta tus personal records en segundos con My Lifts.',
+  ogTitle: 'My Lifts | Trackea tus levantamientos y mejora tu 1RM',
+  ogDescription: 'Registra cada set, revisa tu progreso semanal y detecta tus personal records en segundos con My Lifts.'
+})
+
 if (isAuthenticated.value) {
   await navigateTo('/dashboard', { replace: true })
 }
@@ -47,6 +54,32 @@ onMounted(() => {
             Registrar mi primer set
           </UButton>
         </div>
+      </div>
+
+      <div class="mx-auto w-full max-w-6xl rounded-2xl border border-default bg-elevated/40 p-3 md:p-4">
+        <div class="overflow-hidden rounded-xl border border-default bg-default">
+          <picture>
+            <source
+              srcset="/app-screenshot.webp"
+              type="image/png"
+            >
+            <img
+              src="/app-screenshot.webp"
+              alt="Vista real de la aplicación My Lifts"
+              class="w-full h-auto object-contain"
+              loading="eager"
+            >
+          </picture>
+        </div>
+      </div>
+
+      <div class="text-center space-y-3 pt-16">
+        <h2 class="text-2xl md:text-3xl font-bold text-highlighted text-balance">
+          Todo lo que necesitas para progresar
+        </h2>
+        <p class="mx-auto max-w-2xl text-muted md:text-lg text-balance">
+          Registra, analiza y mejora tus levantamientos con métricas claras en una sola app.
+        </p>
       </div>
 
       <div class="grid gap-4 md:grid-cols-3">

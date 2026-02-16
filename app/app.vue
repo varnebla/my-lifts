@@ -20,9 +20,19 @@ useHead({
 
 const title = 'My Lifts'
 const description = 'Trackea tus levantamientos y visualiza tu progreso de 1RM.'
-const items = [
-  { label: 'Historial', to: '/history', icon: 'i-lucide-history' },
-  { label: 'Records', to: '/records', icon: 'i-lucide-award' }]
+const items = computed(() => {
+  if (isAuthenticated.value) {
+    return [
+      { label: 'Historial', to: '/history', icon: 'i-lucide-history' },
+      { label: 'Records', to: '/records', icon: 'i-lucide-award' }
+    ]
+  }
+
+  return [
+    { label: 'Historial', icon: 'i-lucide-history', onSelect: loginModal.open },
+    { label: 'Records', icon: 'i-lucide-award', onSelect: loginModal.open }
+  ]
+})
 
 useSeoMeta({
   title,
@@ -48,7 +58,7 @@ async function handleLogout(e: Event) {
           :to="homeLink"
           class="flex items-center gap-2 ml-auto md:ml-0"
         >
-          <span class="text-xl font-bold text-primary">My Lifts</span>
+          <span class="text-xl font-bold text-primary font-display">My Lifts</span>
         </NuxtLink>
       </template>
       <UNavigationMenu
@@ -62,7 +72,7 @@ async function handleLogout(e: Event) {
         />
       </template>
       <template #right>
-        <UColorModeButton />
+        <!-- <UColorModeButton /> -->
 
         <template v-if="isAuthenticated">
           <UDropdownMenu

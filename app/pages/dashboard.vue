@@ -11,6 +11,13 @@ const { calculate: calculate1RM } = use1RM()
 const { calculateWeeklyComparison, filterLastNDays, formatVolume } = useStats()
 const toast = useToast()
 
+useSeoMeta({
+  title: 'Dashboard | My Lifts',
+  description: 'Consulta tus últimos records, estadísticas semanales e historial reciente en tu dashboard de My Lifts.',
+  ogTitle: 'Dashboard | My Lifts',
+  ogDescription: 'Consulta tus últimos records, estadísticas semanales e historial reciente en tu dashboard de My Lifts.'
+})
+
 // Fetch sets with caching across navigation
 const { data: sets, status, error, refetch } = await useSetsData()
 
@@ -128,8 +135,7 @@ async function handleSetSaved() {
               Bienvenido de nuevo,
             </p>
             <h1 class="text-xl font-bold text-highlighted">
-              <!-- {{ userName || userEmail }} -->
-              Victor Arnedo Blanco
+              {{ userName || userEmail }}
             </h1>
           </div>
         </article>

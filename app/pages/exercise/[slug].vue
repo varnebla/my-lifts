@@ -40,6 +40,21 @@ const loading = computed(() => exerciseStatus.value === 'pending' || setsStatus.
 const showModal = ref(false)
 const editingSet = ref<SetWithExercise | undefined>(undefined)
 
+const exerciseNameForMeta = computed(() => {
+  if (exercise.value?.name) return exercise.value.name
+  return exerciseSlug.replace(/-/g, ' ')
+})
+
+const exerciseMetaTitle = computed(() => `${exerciseNameForMeta.value} | My Lifts`)
+const exerciseMetaDescription = computed(() => `Sigue el progreso, historial y porcentajes de ${exerciseNameForMeta.value} en My Lifts.`)
+
+useSeoMeta({
+  title: exerciseMetaTitle,
+  description: exerciseMetaDescription,
+  ogTitle: exerciseMetaTitle,
+  ogDescription: exerciseMetaDescription
+})
+
 // Mutations for delete
 const { remove } = useSetMutations(exerciseSets)
 
