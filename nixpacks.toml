@@ -1,0 +1,14 @@
+[phases.setup]
+nixPkgs = ["nodejs_20", "bun"]
+
+[phases.install]
+cmds = ["bun install --frozen-lockfile || bun install"]
+
+[phases.build]
+cmds = ["bun run build"]
+
+[start]
+cmd = "bun .output/server/index.mjs"
+
+[variables]
+NODE_ENV = "production"
