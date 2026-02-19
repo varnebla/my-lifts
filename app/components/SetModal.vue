@@ -19,7 +19,9 @@ const isDesktop = useMediaQuery('(min-width: 768px)')
 
 const { exercises, fetch: fetchExercises } = useExercises()
 const { create, update } = useSetActions()
+const { track } = useAnalytics()
 const toast = useToast()
+const route = useRoute()
 
 // Form state
 const selectedExercise = ref<Exercise | undefined>(undefined)
@@ -65,6 +67,12 @@ const isValid = computed(() => {
   return selectedExercise.value && weightKg.value && weightKg.value > 0 && reps.value && reps.value > 0
 })
 
+function getSourcePage() {
+  if (route.path.startsWith('/exercise/')) return 'exercise_detail'
+  if (route.path.startsWith('/history')) return 'history'
+  return 'dashboard'
+}
+
 async function handleSubmit() {
   if (!isValid.value || !selectedExercise.value || !weightKg.value || !reps.value) return
 
@@ -85,6 +93,15 @@ async function handleSubmit() {
   saving.value = false
 
   if (result.success) {
+    track(isEditing.value ? 'set:update_success' : 'set:create_success', {
+      source: getSourcePage(),
+      exercise_id: selectedExercise.value.id,
+      exercise_slug: selectedExercise.value.slug,
+      weight_kg: weightKg.value,
+      reps: reps.value,
+      has_notes: Boolean(notes.value)
+    })
+
     toast.add({
       title: isEditing.value ? 'Set actualizado' : 'Set registrado',
       description: `${selectedExercise.value.name}: ${weightKg.value}kg × ${reps.value}`,
@@ -94,6 +111,10 @@ async function handleSubmit() {
     emit('update:open', false)
     emit('saved')
   } else {
+    track(isEditing.value ? 'set:update_error' : 'set:create_error', {
+      source: getSourcePage()
+    })
+
     toast.add({
       title: 'Error',
       description: result.error,

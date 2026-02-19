@@ -90,7 +90,7 @@ onMounted(() => {
               class="h-5 w-5"
             />
             <p class="text-sm font-semibold uppercase tracking-wide text-muted">
-              Personal Records
+              Records Personales
             </p>
           </div>
           <p class="text-sm text-muted">

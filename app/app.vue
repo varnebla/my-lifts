@@ -10,9 +10,6 @@ useHead({
   meta: [
     { name: 'viewport', content: 'width=device-width, initial-scale=1' }
   ],
-  link: [
-    { rel: 'icon', href: '/favicon.ico' }
-  ],
   htmlAttrs: {
     lang: 'es'
   }
@@ -58,7 +55,7 @@ async function handleLogout(e: Event) {
           :to="homeLink"
           class="flex items-center gap-2 ml-auto md:ml-0"
         >
-          <span class="text-xl font-bold text-primary font-display">My Lifts</span>
+          <span class="text-2xl font-bold text-primary font-display">My Lifts</span>
         </NuxtLink>
       </template>
       <UNavigationMenu
@@ -76,6 +73,7 @@ async function handleLogout(e: Event) {
 
         <template v-if="isAuthenticated">
           <UDropdownMenu
+            size="lg"
             :items="[
               [{
                 label: userName || userEmail || 'Usuario',

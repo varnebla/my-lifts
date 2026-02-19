@@ -30,6 +30,7 @@ const route = useRoute()
 const exerciseSlug = route.params.slug as string
 
 const { calculate: calculate1RM } = use1RM()
+const { track } = useAnalytics()
 const toast = useToast()
 
 // Fetch exercise and sets with SSR
@@ -240,12 +241,23 @@ async function handleDelete(id: string) {
   const result = await remove(id)
 
   if (result.success) {
+    track('set:delete_success', {
+      source: 'exercise_detail',
+      set_id: id,
+      exercise_slug: exerciseSlug
+    })
+
     toast.add({
       title: 'Set eliminado',
       icon: 'i-lucide-trash-2',
       color: 'neutral'
     })
   } else {
+    track('set:delete_error', {
+      source: 'exercise_detail',
+      exercise_slug: exerciseSlug
+    })
+
     toast.add({
       title: 'Error',
       description: result.error,
@@ -371,7 +383,7 @@ function handleSetSaved() {
             class="relative"
           >
             <p class="text-xs font-medium uppercase tracking-wider text-muted">
-              Current 1RM
+              1RM Actual
             </p>
             <div class="mt-2 flex items-baseline gap-2">
               <span class="font-display text-6xl tracking-tight text-primary-400 text-glow">{{ currentPR.value }}</span>
@@ -405,7 +417,7 @@ function handleSetSaved() {
           <div class="flex items-center gap-2 mb-4">
             <div class="h-2 w-2 rounded-full bg-primary-400" />
             <h2 class="text-sm font-semibold uppercase tracking-wider text-muted">
-              1RM Progression
+              Progresión de 1RM
             </h2>
           </div>
           <div class="h-48 lg:h-44">
@@ -466,7 +478,7 @@ function handleSetSaved() {
               class="h-5 w-5 text-secondary-400"
             />
             <h2 class="text-sm font-semibold uppercase tracking-wider text-muted">
-              Percentage Table
+              Tabla de Porcentajes
             </h2>
           </div>
           <div v-if="loading">
@@ -481,7 +493,7 @@ function handleSetSaved() {
           </div>
           <template v-else>
             <p class="text-sm text-dimmed mb-4">
-              Based on your 1RM of <span class="text-primary-400 font-display text-lg">{{ currentPR?.value }}</span> kg
+              Basado en tu 1RM de <span class="text-primary-400 font-display text-lg">{{ currentPR?.value }}</span> kg
             </p>
 
             <div class="space-y-2">
@@ -521,7 +533,7 @@ function handleSetSaved() {
               class="h-5 w-5 text-secondary-400"
             />
             <h2 class="text-sm font-semibold uppercase tracking-wider text-muted">
-              History Log
+              Historial
             </h2>
           </div>
           <div

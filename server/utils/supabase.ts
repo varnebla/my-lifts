@@ -1,5 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
+import { getHeader } from 'h3'
 import type { H3Event } from 'h3'
+import { serialize } from 'cookie-es'
+import type { CookieSerializeOptions } from 'cookie-es'
 import type { Database } from '~/types/database'
 
 /**
@@ -24,11 +27,27 @@ export function getServerSupabase(event: H3Event) {
       },
       setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value, options }) => {
-          setCookie(event, name, value, options)
+          const cookieStr = serialize(name, value, options as CookieSerializeOptions)
+          appendSetCookieHeader(event, cookieStr)
         })
       }
     }
   })
+}
+
+function appendSetCookieHeader(event: H3Event, cookieValue: string) {
+  const current = event.node.res.getHeader('Set-Cookie')
+
+  if (!current) {
+    event.node.res.setHeader('Set-Cookie', cookieValue)
+    return
+  }
+
+  const currentList = Array.isArray(current)
+    ? current.map(value => String(value))
+    : [String(current)]
+
+  event.node.res.setHeader('Set-Cookie', [...currentList, cookieValue])
 }
 
 // Helper to parse cookie header

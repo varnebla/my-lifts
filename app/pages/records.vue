@@ -23,7 +23,7 @@ const allPRs = computed(() => sortByLatestSet(calculatePRs(sets.value ?? [])))
   <UContainer class="py-8">
     <div class="space-y-8">
       <div class="flex items-center justify-between gap-4">
-        <div class="flex items-center gap-4">
+        <div class="flex items-start gap-4">
           <UButton
             to="/dashboard"
             variant="ghost"

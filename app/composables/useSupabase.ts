@@ -35,12 +35,29 @@ export function useSupabase(): SupabaseClient<Database> {
         cookiesToSet.forEach(({ name, value, options }) => {
           if (event?.node.res) {
             const cookieStr = serializeCookie(name, value, options)
-            appendHeader(event, 'Set-Cookie', cookieStr)
+            appendSetCookieHeader(event, cookieStr)
           }
         })
       }
     }
   })
+}
+
+function appendSetCookieHeader(event: ReturnType<typeof useRequestEvent>, cookieValue: string) {
+  if (!event?.node?.res) return
+
+  const current = event.node.res.getHeader('Set-Cookie')
+
+  if (!current) {
+    event.node.res.setHeader('Set-Cookie', cookieValue)
+    return
+  }
+
+  const currentList = Array.isArray(current)
+    ? current.map(value => String(value))
+    : [String(current)]
+
+  event.node.res.setHeader('Set-Cookie', [...currentList, cookieValue])
 }
 
 // Helper to parse cookie header string

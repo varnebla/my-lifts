@@ -6,6 +6,7 @@ definePageMeta({
 })
 
 const { calculate: calculate1RM } = use1RM()
+const { track } = useAnalytics()
 const toast = useToast()
 
 useSeoMeta({
@@ -108,6 +109,12 @@ async function handleDelete(id: string, exerciseName: string) {
   const result = await remove(id)
 
   if (result.success) {
+    track('set:delete_success', {
+      source: 'history',
+      set_id: id,
+      exercise_name: exerciseName
+    })
+
     toast.add({
       title: 'Set eliminado',
       description: `${exerciseName} eliminado`,
@@ -115,6 +122,10 @@ async function handleDelete(id: string, exerciseName: string) {
       color: 'neutral'
     })
   } else {
+    track('set:delete_error', {
+      source: 'history'
+    })
+
     toast.add({
       title: 'Error',
       description: result.error,
@@ -130,7 +141,7 @@ async function handleDelete(id: string, exerciseName: string) {
     <div class="space-y-8">
       <!-- Header -->
       <div class="flex items-center justify-between gap-4">
-        <div class="flex items-center gap-4">
+        <div class="flex items-start gap-4">
           <UButton
             to="/dashboard"
             variant="ghost"

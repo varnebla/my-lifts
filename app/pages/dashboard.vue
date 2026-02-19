@@ -9,6 +9,7 @@ const { userName, userEmail, userAvatar } = useAuth()
 const { calculatePRs, sortByLatestSet } = usePRs()
 const { calculate: calculate1RM } = use1RM()
 const { calculateWeeklyComparison, filterLastNDays, formatVolume } = useStats()
+const { track } = useAnalytics()
 const toast = useToast()
 
 useSeoMeta({
@@ -97,6 +98,12 @@ async function handleDelete(id: string, exerciseName: string) {
   const result = await remove(id)
 
   if (result.success) {
+    track('set:delete_success', {
+      source: 'dashboard',
+      set_id: id,
+      exercise_name: exerciseName
+    })
+
     toast.add({
       title: 'Set eliminado',
       description: `${exerciseName} eliminado`,
@@ -104,6 +111,10 @@ async function handleDelete(id: string, exerciseName: string) {
       color: 'neutral'
     })
   } else {
+    track('set:delete_error', {
+      source: 'dashboard'
+    })
+
     toast.add({
       title: 'Error',
       description: result.error,
@@ -142,14 +153,14 @@ async function handleSetSaved() {
         <UButton
           icon="i-lucide-plus"
           size="lg"
-          class="hidden sm:flex"
+          class="hidden sm:flex shadow-lg shadow-primary-500/25 hover:shadow-primary-500/35"
           label="Nuevo Set"
           @click="openAddModal"
         />
         <UButton
           icon="i-lucide-plus"
           size="lg"
-          class="sm:hidden"
+          class="sm:hidden shadow-lg shadow-primary-500/25 hover:shadow-primary-500/35"
           square
           @click="openAddModal"
         />
@@ -230,10 +241,20 @@ async function handleSetSaved() {
       <template v-else>
         <!-- PRs Section -->
         <div v-if="allPRs.length > 0">
-          <div class="mb-4">
+          <div class="mb-4 flex items-center justify-between">
             <h2 class="text-sm font-semibold uppercase tracking-wider text-muted">
               Últimos Records
             </h2>
+            <NuxtLink
+              to="/records"
+              class="text-sm text-primary-400 hover:text-primary-300 flex items-center gap-1"
+            >
+              Ver todo
+              <UIcon
+                name="i-lucide-arrow-right"
+                class="h-4 w-4"
+              />
+            </NuxtLink>
           </div>
 
           <!-- Mobile: horizontal row with latest PRs -->
@@ -270,7 +291,7 @@ async function handleSetSaved() {
                       class="mt-2"
                       :icon="'i-lucide-trophy'"
                     >
-                      {{ pr.allTimeBest1RM ? `Best: ${pr.allTimeBest1RM}kg` : 'Personal Best' }}
+                      {{ pr.allTimeBest1RM ? `Mejor: ${pr.allTimeBest1RM}kg` : 'Record Personal' }}
                     </UBadge>
                   </div>
                   <div class="absolute bottom-4 right-4">
@@ -320,7 +341,7 @@ async function handleSetSaved() {
                     class="mt-2"
                     :icon="'i-lucide-trophy'"
                   >
-                    {{ pr.allTimeBest1RM ? `Best: ${pr.allTimeBest1RM}kg` : 'Personal Best' }}
+                    {{ pr.allTimeBest1RM ? `Mejor: ${pr.allTimeBest1RM}kg` : 'Record Personal' }}
                   </UBadge>
                 </div>
                 <!-- Chevron -->
