@@ -40,5 +40,9 @@ export default defineNuxtConfig({
       { name: 'Inter', provider: 'google' },
       { name: 'Bebas Neue', provider: 'google' }
     ]
+  },
+
+  nitro: {
+    preset: 'bun'
   }
 })

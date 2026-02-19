@@ -1,60 +1,77 @@
-# Nuxt Starter Template
+# My Lifts
 
-[![Nuxt UI](https://img.shields.io/badge/Made%20with-Nuxt%20UI-00DC82?logo=nuxt&labelColor=020420)](https://ui.nuxt.com)
+Aplicación de seguimiento de entrenamientos con Nuxt 4, Nuxt UI y Supabase Auth.
 
-Use this template to get started with [Nuxt UI](https://ui.nuxt.com) quickly.
+## Requisitos
 
-- [Live demo](https://starter-template.nuxt.dev/)
-- [Documentation](https://ui.nuxt.com/docs/getting-started/installation/nuxt)
+- Node.js 20+
+- pnpm (el proyecto usa `pnpm@10`)
 
-<a href="https://starter-template.nuxt.dev/" target="_blank">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://ui.nuxt.com/assets/templates/nuxt/starter-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="https://ui.nuxt.com/assets/templates/nuxt/starter-light.png">
-    <img alt="Nuxt Starter Template" src="https://ui.nuxt.com/assets/templates/nuxt/starter-light.png">
-  </picture>
-</a>
+## Variables de entorno
 
-> The starter template for Vue is on https://github.com/nuxt-ui-templates/starter-vue.
+Copia `.env.example` a `.env` y completa:
 
-## Quick Start
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `NODE_ENV=production` (en producción)
+- `NITRO_TRUST_PROXY=true` (recomendado detrás de proxy)
 
-```bash [Terminal]
-npm create nuxt@latest -- -t github:nuxt-ui-templates/starter
-```
-
-## Deploy your own
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-name=starter&repository-url=https%3A%2F%2Fgithub.com%2Fnuxt-ui-templates%2Fstarter&demo-image=https%3A%2F%2Fui.nuxt.com%2Fassets%2Ftemplates%2Fnuxt%2Fstarter-dark.png&demo-url=https%3A%2F%2Fstarter-template.nuxt.dev%2F&demo-title=Nuxt%20Starter%20Template&demo-description=A%20minimal%20template%20to%20get%20started%20with%20Nuxt%20UI.)
-
-## Setup
-
-Make sure to install the dependencies:
+## Desarrollo local
 
 ```bash
 pnpm install
-```
-
-## Development Server
-
-Start the development server on `http://localhost:3000`:
-
-```bash
 pnpm dev
 ```
 
-## Production
-
-Build the application for production:
+## Build y ejecución en producción
 
 ```bash
-pnpm build
+bun install
+bun run build
+bun .output/server/index.mjs
 ```
 
-Locally preview production build:
+## Despliegue en Coolify (VPS)
+
+Configura la app como servicio Bun/Nixpacks (sin Dockerfile custom).
+
+### Comandos recomendados
+
+- Install command:
 
 ```bash
-pnpm preview
+bun install
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+- Build command:
+
+```bash
+bun run build
+```
+
+- Start command:
+
+```bash
+bun .output/server/index.mjs
+```
+
+### Variables en Coolify
+
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `NODE_ENV=production`
+- `NITRO_TRUST_PROXY=true`
+
+## Configuración OAuth en Supabase
+
+Para login con Google en producción:
+
+1. En Supabase Auth, define `Site URL` con tu dominio público:
+   - `https://tu-dominio.com`
+2. En Redirect URLs, añade:
+   - `https://tu-dominio.com/api/auth/callback`
+3. Si pruebas con dominio temporal de Coolify, añade también ese callback temporal.
+
+## Nota de seguridad
+
+El cliente realiza mutaciones directas a Supabase para `sets`. Asegúrate de tener políticas RLS activas para que cada usuario solo pueda leer/escribir sus propios datos.
