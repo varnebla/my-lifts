@@ -1,6 +1,10 @@
 {
+  "id": "/",
   "name": "MyLifts",
   "short_name": "MyLifts",
+  "description": "Seguimiento de entrenamientos, sets y PRs",
+  "start_url": "/",
+  "scope": "/",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
@@ -17,5 +21,6 @@
   ],
   "theme_color": "#ffffff",
   "background_color": "#ffffff",
-  "display": "standalone"
+  "display": "standalone",
+  "orientation": "portrait"
 }

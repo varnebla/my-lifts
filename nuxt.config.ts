@@ -30,6 +30,22 @@ export default defineNuxtConfig({
       ],
       meta: [
         {
+          name: 'theme-color',
+          content: '#ffffff'
+        },
+        {
+          name: 'mobile-web-app-capable',
+          content: 'yes'
+        },
+        {
+          name: 'apple-mobile-web-app-capable',
+          content: 'yes'
+        },
+        {
+          name: 'apple-mobile-web-app-status-bar-style',
+          content: 'default'
+        },
+        {
           name: 'apple-mobile-web-app-title',
           content: 'MyLifts'
         }
@@ -50,7 +66,8 @@ export default defineNuxtConfig({
     '@nuxt/eslint',
     '@nuxt/ui',
     '@pinia/nuxt',
-    '@nuxt/fonts'
+    '@nuxt/fonts',
+    '@vite-pwa/nuxt'
   ],
 
   devtools: {
@@ -86,6 +103,83 @@ export default defineNuxtConfig({
       { name: 'Inter', provider: 'google' },
       { name: 'Bebas Neue', provider: 'google' }
     ]
+  },
+
+  pwa: {
+    registerType: 'autoUpdate',
+    manifest: false,
+    workbox: {
+      navigateFallback: '/',
+      globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,json,woff2}'],
+      runtimeCaching: [
+        {
+          urlPattern: /\/api\/auth\/.*/i,
+          handler: 'NetworkOnly'
+        },
+        {
+          urlPattern: /\/api\/.*/i,
+          handler: 'NetworkFirst',
+          method: 'GET',
+          options: {
+            cacheName: 'api-cache',
+            networkTimeoutSeconds: 5,
+            expiration: {
+              maxEntries: 100,
+              maxAgeSeconds: 60 * 60 * 24
+            },
+            cacheableResponse: {
+              statuses: [0, 200]
+            }
+          }
+        },
+        {
+          urlPattern: /\/_nuxt\/.*/i,
+          handler: 'StaleWhileRevalidate',
+          options: {
+            cacheName: 'nuxt-assets',
+            expiration: {
+              maxEntries: 200,
+              maxAgeSeconds: 60 * 60 * 24 * 30
+            },
+            cacheableResponse: {
+              statuses: [0, 200]
+            }
+          }
+        },
+        {
+          urlPattern: /\/.*\.(?:png|jpg|jpeg|svg|gif|webp|ico|woff2)$/i,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'static-assets',
+            expiration: {
+              maxEntries: 200,
+              maxAgeSeconds: 60 * 60 * 24 * 30
+            },
+            cacheableResponse: {
+              statuses: [0, 200]
+            }
+          }
+        },
+        {
+          urlPattern: /\/.*/i,
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'pages-cache',
+            networkTimeoutSeconds: 5,
+            expiration: {
+              maxEntries: 100,
+              maxAgeSeconds: 60 * 60 * 24
+            },
+            cacheableResponse: {
+              statuses: [0, 200]
+            }
+          }
+        }
+      ]
+    },
+    devOptions: {
+      enabled: false
+    }
   },
 
   nitro: {

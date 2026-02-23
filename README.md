@@ -23,6 +23,20 @@ pnpm install
 pnpm dev
 ```
 
+## PWA (offline + instalar en móvil)
+
+- La app funciona como PWA en producción (`pnpm build` / `pnpm preview`).
+- Soporta instalación en home screen (Android e iOS) mediante `site.webmanifest`.
+- Incluye caché offline para assets, páginas visitadas y respuestas `GET` de `/api/*`.
+- Las rutas de autenticación (`/api/auth/*`) siempre van a red (sin caché).
+
+Para validar instalación/offline en local:
+
+```bash
+pnpm build
+pnpm preview
+```
+
 ## Build y ejecución en producción
 
 ```bash
