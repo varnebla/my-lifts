@@ -1,5 +1,27 @@
 import type { SetInsert, SetUpdate, SetWithExercise } from '~/types/database'
 
+type SetMutationResult = {
+  success: boolean
+  error?: string
+  queued?: boolean
+}
+
+function isOfflineClient() {
+  return import.meta.client && !navigator.onLine
+}
+
+function shouldQueueFromError(error: unknown) {
+  if (!import.meta.client) return false
+  if (!navigator.onLine) return true
+
+  const message = error instanceof Error ? error.message : String(error)
+  const normalized = message.toLowerCase()
+
+  return normalized.includes('network')
+    || normalized.includes('failed to fetch')
+    || normalized.includes('fetch failed')
+}
+
 /**
  * Composable for fetching sets with caching across navigation
  * Uses the same key so data is shared between pages
@@ -41,10 +63,16 @@ export async function useSetsData() {
 export function useSetActions() {
   const supabase = useSupabase()
   const { user } = useAuth()
+  const { enqueueCreateSet, enqueueUpdateSet, enqueueRemoveSet, syncPendingSets } = useOfflineSetQueue()
 
-  async function create(data: Omit<SetInsert, 'user_id'>): Promise<{ success: boolean, error?: string }> {
+  async function create(data: Omit<SetInsert, 'user_id'>): Promise<SetMutationResult> {
     if (!user.value) {
       return { success: false, error: 'No autenticado' }
+    }
+
+    if (isOfflineClient()) {
+      enqueueCreateSet(user.value.id, data)
+      return { success: true, queued: true }
     }
 
     try {
@@ -61,8 +89,17 @@ export function useSetActions() {
 
       await refreshNuxtData('user-sets')
 
+      if (import.meta.client && navigator.onLine) {
+        await syncPendingSets(user.value.id)
+      }
+
       return { success: true }
     } catch (e) {
+      if (shouldQueueFromError(e)) {
+        enqueueCreateSet(user.value.id, data)
+        return { success: true, queued: true }
+      }
+
       console.error('Error creating set:', e)
       return {
         success: false,
@@ -71,9 +108,14 @@ export function useSetActions() {
     }
   }
 
-  async function update(id: string, data: SetUpdate): Promise<{ success: boolean, error?: string }> {
+  async function update(id: string, data: SetUpdate): Promise<SetMutationResult> {
     if (!user.value) {
       return { success: false, error: 'No autenticado' }
+    }
+
+    if (isOfflineClient()) {
+      enqueueUpdateSet(user.value.id, id, data)
+      return { success: true, queued: true }
     }
 
     try {
@@ -86,8 +128,17 @@ export function useSetActions() {
 
       await refreshNuxtData('user-sets')
 
+      if (import.meta.client && navigator.onLine) {
+        await syncPendingSets(user.value.id)
+      }
+
       return { success: true }
     } catch (e) {
+      if (shouldQueueFromError(e)) {
+        enqueueUpdateSet(user.value.id, id, data)
+        return { success: true, queued: true }
+      }
+
       console.error('Error updating set:', e)
       return {
         success: false,
@@ -96,9 +147,14 @@ export function useSetActions() {
     }
   }
 
-  async function remove(id: string): Promise<{ success: boolean, error?: string }> {
+  async function remove(id: string): Promise<SetMutationResult> {
     if (!user.value) {
       return { success: false, error: 'No autenticado' }
+    }
+
+    if (isOfflineClient()) {
+      enqueueRemoveSet(user.value.id, id)
+      return { success: true, queued: true }
     }
 
     try {
@@ -109,8 +165,17 @@ export function useSetActions() {
 
       if (deleteError) throw deleteError
 
+      if (import.meta.client && navigator.onLine) {
+        await syncPendingSets(user.value.id)
+      }
+
       return { success: true }
     } catch (e) {
+      if (shouldQueueFromError(e)) {
+        enqueueRemoveSet(user.value.id, id)
+        return { success: true, queued: true }
+      }
+
       console.error('Error deleting set:', e)
       return {
         success: false,
@@ -128,10 +193,16 @@ export function useSetActions() {
 export function useSetMutations(sets: Ref<SetWithExercise[] | null>) {
   const supabase = useSupabase()
   const { user } = useAuth()
+  const { enqueueCreateSet, enqueueUpdateSet, enqueueRemoveSet, syncPendingSets } = useOfflineSetQueue()
 
-  async function create(data: Omit<SetInsert, 'user_id'>): Promise<{ success: boolean, error?: string }> {
+  async function create(data: Omit<SetInsert, 'user_id'>): Promise<SetMutationResult> {
     if (!user.value) {
       return { success: false, error: 'No autenticado' }
+    }
+
+    if (isOfflineClient()) {
+      enqueueCreateSet(user.value.id, data)
+      return { success: true, queued: true }
     }
 
     try {
@@ -156,8 +227,17 @@ export function useSetMutations(sets: Ref<SetWithExercise[] | null>) {
         sets.value = [newSet as SetWithExercise, ...sets.value]
       }
 
+      if (import.meta.client && navigator.onLine) {
+        await syncPendingSets(user.value.id)
+      }
+
       return { success: true }
     } catch (e) {
+      if (shouldQueueFromError(e)) {
+        enqueueCreateSet(user.value.id, data)
+        return { success: true, queued: true }
+      }
+
       console.error('Error creating set:', e)
       return {
         success: false,
@@ -166,9 +246,21 @@ export function useSetMutations(sets: Ref<SetWithExercise[] | null>) {
     }
   }
 
-  async function update(id: string, data: SetUpdate): Promise<{ success: boolean, error?: string }> {
+  async function update(id: string, data: SetUpdate): Promise<SetMutationResult> {
     if (!user.value) {
       return { success: false, error: 'No autenticado' }
+    }
+
+    if (isOfflineClient()) {
+      enqueueUpdateSet(user.value.id, id, data)
+
+      if (sets.value) {
+        sets.value = sets.value.map(s =>
+          s.id === id ? { ...s, ...data } : s
+        )
+      }
+
+      return { success: true, queued: true }
     }
 
     try {
@@ -186,8 +278,24 @@ export function useSetMutations(sets: Ref<SetWithExercise[] | null>) {
         )
       }
 
+      if (import.meta.client && navigator.onLine) {
+        await syncPendingSets(user.value.id)
+      }
+
       return { success: true }
     } catch (e) {
+      if (shouldQueueFromError(e)) {
+        enqueueUpdateSet(user.value.id, id, data)
+
+        if (sets.value) {
+          sets.value = sets.value.map(s =>
+            s.id === id ? { ...s, ...data } : s
+          )
+        }
+
+        return { success: true, queued: true }
+      }
+
       console.error('Error updating set:', e)
       return {
         success: false,
@@ -196,9 +304,19 @@ export function useSetMutations(sets: Ref<SetWithExercise[] | null>) {
     }
   }
 
-  async function remove(id: string): Promise<{ success: boolean, error?: string }> {
+  async function remove(id: string): Promise<SetMutationResult> {
     if (!user.value) {
       return { success: false, error: 'No autenticado' }
+    }
+
+    if (isOfflineClient()) {
+      enqueueRemoveSet(user.value.id, id)
+
+      if (sets.value) {
+        sets.value = sets.value.filter(s => s.id !== id)
+      }
+
+      return { success: true, queued: true }
     }
 
     try {
@@ -214,8 +332,22 @@ export function useSetMutations(sets: Ref<SetWithExercise[] | null>) {
         sets.value = sets.value.filter(s => s.id !== id)
       }
 
+      if (import.meta.client && navigator.onLine) {
+        await syncPendingSets(user.value.id)
+      }
+
       return { success: true }
     } catch (e) {
+      if (shouldQueueFromError(e)) {
+        enqueueRemoveSet(user.value.id, id)
+
+        if (sets.value) {
+          sets.value = sets.value.filter(s => s.id !== id)
+        }
+
+        return { success: true, queued: true }
+      }
+
       console.error('Error deleting set:', e)
       return {
         success: false,
